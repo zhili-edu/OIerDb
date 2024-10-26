@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { openDB } from 'idb';
-import { trackEvent } from '@/libs/plausible';
 import { Counter } from './Counter';
-import promiseAny from '@/utils/promiseAny';
+import staticJsonUrl from '../../data/static.json?url';
+import resultTxtUrl from '../../data/result.txt?url';
 
 export class OIer {
   constructor(settings: any) {
@@ -93,33 +93,7 @@ export interface OIerDbData {
   enroll_middle_years: number[];
 }
 
-const infoUrls = [
-  'https://oier.api.baoshuo.dev',
-  'https://oierdb-ng.github.io/OIerDb-data-generator',
-];
-
-const urls = [
-  'https://sb.cdn.baoshuo.ren/oier',
-  'https://oier.cdn.baoshuo.dev',
-  'https://oier.api.baoshuo.dev',
-  'https://oierdb-ng.github.io/OIerDb-data-generator',
-];
-
 let __DATA__: OIerDbData = null;
-
-const checkSha512 = (staticSha512: string, resultSha512: string) => {
-  try {
-    const { staticSha512: localStaticSha152, resultSha512: localResultSha512 } =
-      localStorage;
-
-    return (
-      staticSha512 === localStaticSha152 && resultSha512 === localResultSha512
-    );
-  } catch (e) {
-    console.error(e);
-    return false;
-  }
-};
 
 const saveDataToIndexedDb = async (name: 'static' | 'oiers', data: any) => {
   const db = await openDB('OIerDb', 2, {
@@ -300,101 +274,17 @@ const processData = (data: any) => {
   return result;
 };
 
-const getData = async (
-  urls: string | string[],
-  size: number,
-  setProgressPercent?: (p: number) => void,
-  start = 0,
-  end = 100,
-  trackLabel = ''
-) => {
-  const startTime = performance.now();
-
-  if (!Array.isArray(urls)) urls = [urls];
-
-  let response: Response = null;
-  let realUrl: string = null;
-  for (const url of urls) {
-    try {
-      response = await fetch(url);
-      realUrl = url;
-      if (response.ok) break;
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  let receivedSize = 0;
-  const chunks: Uint8Array[] = [];
-
-  const reader = response.body.getReader();
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    receivedSize += value.length;
-
-    if (setProgressPercent) {
-      setProgressPercent(
-        Math.ceil(start + Math.min((receivedSize / size) * (end - start), end))
-      );
-    }
-  }
-
-  const chunksAll = new Uint8Array(receivedSize);
-  let pos = 0;
-  for (const chunk of chunks) {
-    chunksAll.set(chunk, pos);
-    pos += chunk.length;
-  }
-
-  const data = new TextDecoder().decode(chunksAll);
-
-  if (trackLabel) {
-    const timeUsed = performance.now() - startTime;
-
-    trackEvent('Download: ' + trackLabel, {
-      props: {
-        url: realUrl,
-        time:
-          timeUsed < 100
-            ? Math.floor(timeUsed / 25) * 25
-            : Math.floor(timeUsed / 100) * 100,
-      },
-    });
-  }
-
-  return data;
-};
-
-export const initDb = async (setProgressPercent?: (p: number) => void) => {
+export const initDb = async (setProgressPercent: (p: number) => void) => {
   if (__DATA__) return __DATA__;
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  if (!setProgressPercent) setProgressPercent = () => {};
+  let staticData, oiers;
 
-  const {
-    sha512: staticSha512,
-    size: staticSize,
-  }: { sha512: string; size: number } = await promiseAny(
-    infoUrls.map((url) => fetch(`${url}/static.info.json?_=${+new Date()}`))
-  ).then((res) => res.json());
-
-  setProgressPercent(4);
-
-  const {
-    sha512: resultSha512,
-    size: resultSize,
-  }: { sha512: string; size: number } = await promiseAny(
-    infoUrls.map((url) => fetch(`${url}/result.info.json?_=${+new Date()}`))
-  ).then((res) => res.json());
-
-  setProgressPercent(8);
-
-  if (checkSha512(staticSha512, resultSha512)) {
-    const staticData = await getDataFromIndexedDb('static');
-    const oiers = await getDataFromIndexedDb('oiers');
+  if (
+    localStorage.getItem('staticJsonUrl') === staticJsonUrl &&
+    localStorage.getItem('resultTxtUrl') === resultTxtUrl
+  ) {
+    staticData = await getDataFromIndexedDb('static');
+    oiers = await getDataFromIndexedDb('oiers');
 
     if (staticData && oiers) {
       return (__DATA__ = processData({ static: staticData, oiers }));
@@ -403,36 +293,25 @@ export const initDb = async (setProgressPercent?: (p: number) => void) => {
 
   setProgressPercent(10);
 
-  const staticData = await getData(
-    urls.map((url) => `${url}/static.${staticSha512.substring(0, 7)}.json`),
-    staticSize,
-    setProgressPercent,
-    10,
-    40,
-    'static.json'
-  ).then((res) => JSON.parse(res));
+  staticData = await fetch(staticJsonUrl).then((res) => res.json());
+  oiers = await fetch(resultTxtUrl)
+    .then((res) => res.text())
+    .then(textToRaw);
 
-  const oiers = await getData(
-    urls.map((url) => `${url}/result.${resultSha512.substring(0, 7)}.txt`),
-    resultSize,
-    setProgressPercent,
-    40,
-    90,
-    'result.txt'
-  ).then(textToRaw);
+  setProgressPercent(50);
 
   await saveDataToIndexedDb('static', staticData);
 
-  setProgressPercent(93);
+  setProgressPercent(75);
 
   await saveDataToIndexedDb('oiers', oiers);
 
-  setProgressPercent(96);
+  setProgressPercent(90);
 
-  localStorage.setItem('staticSha512', staticSha512);
-  localStorage.setItem('resultSha512', resultSha512);
+  localStorage.setItem('staticJsonUrl', staticJsonUrl);
+  localStorage.setItem('resultTxtUrl', resultTxtUrl);
 
-  setProgressPercent(97);
+  setProgressPercent(95);
 
   __DATA__ = processData({ static: staticData, oiers });
 
