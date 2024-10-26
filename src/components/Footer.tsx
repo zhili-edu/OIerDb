@@ -2,7 +2,6 @@ import React from 'react';
 
 // Components
 import { Container, Segment, Icon } from 'semantic-ui-react';
-import { EmojiRenderer } from './EmojiRenderer';
 
 // Styles
 import styles from './Footer.module.less';
@@ -28,11 +27,7 @@ const Footer: React.FC = () => (
       </div>
       {/* 人员按字典序排列 */}
       <div className={styles.footerText}>
-        Made with &nbsp;
-        <i>
-          <EmojiRenderer>💖</EmojiRenderer>
-        </i>
-        &nbsp; by{' '}
+        Made with &nbsp; 💖 &nbsp; by{' '}
         <a
           href="https://baoshuo.ren/?utm_source=oier.baoshuo.dev"
           target="_blank"

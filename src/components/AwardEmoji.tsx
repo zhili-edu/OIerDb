@@ -1,20 +1,15 @@
-import React, { memo } from 'react';
-import { EmojiRenderer } from '@/components/EmojiRenderer';
+import { memo } from 'react';
 
-interface AwardEmojiProps {
-  level: string;
-}
-
-const AwardEmoji: React.FC<AwardEmojiProps> = (props) => {
+const AwardEmoji = ({ level }: { level: string }) => {
   const keywordsOfType = [['金'], ['银'], ['铜']];
   const emojis = ['🥇', '🥈', '🥉'];
 
   const type = keywordsOfType.findIndex((keywords) =>
-    keywords.some((keyword) => props.level.includes(keyword))
+    keywords.some((keyword) => level.includes(keyword))
   );
   const emoji = emojis[type];
 
-  return emoji ? <EmojiRenderer>{emoji}</EmojiRenderer> : null;
+  return <>{emoji}</>;
 };
 
 export default memo(AwardEmoji);
