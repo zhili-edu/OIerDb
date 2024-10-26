@@ -12,10 +12,6 @@ import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import Loading from '@/components/Loading';
 import { initDb } from '@/libs/OIerDb';
-import {
-  enableAutoPageviews,
-  enableAutoTrackMultiDomain,
-} from '@/libs/plausible';
 
 // Pages
 const Home = lazy(() => import('@/pages/index'));
@@ -29,6 +25,7 @@ const NotFound = lazy(() => import('@/pages/404'));
 const About = lazy(() => import('@/pages/about'));
 
 // Styles
+import 'semantic-ui-css/semantic.min.css';
 import './main.css';
 import styles from './main.module.less';
 
@@ -61,9 +58,6 @@ const App: React.FC = () => {
       }
     })();
   }, []);
-
-  useEffect(() => enableAutoPageviews(), []);
-  useEffect(() => enableAutoTrackMultiDomain(), []);
 
   // 不支持 indexedDB
   if (notSupportIndexedDB) {
