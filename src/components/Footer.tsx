@@ -17,7 +17,7 @@ const Footer: React.FC = () => (
       <div className={styles.footerIcons}>
         <code>{window.appVersion.substring(0, 7)}</code>
         <a
-          href="https://github.com/renbaoshuo/OIerDb"
+          href="https://github.com/zhili-edu/OIerDb"
           title="GitHub"
           target="_blank"
           rel="noreferrer noopener"
@@ -48,9 +48,13 @@ const Footer: React.FC = () => (
         <a href="https://bytew.net" target="_blank" rel="noreferrer">
           nocriz
         </a>{' '}
-        and{' '}
+        {', '}
         <a href="https://github.com/yhx-12243" target="_blank" rel="noreferrer">
           yhx-12243
+        </a>{' '}
+        and{' '}
+        <a href="https://github.com/zhili-edu" target="_blank" rel="noreferrer">
+          执理教育科技
         </a>
       </div>
     </Container>

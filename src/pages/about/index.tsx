@@ -4,7 +4,6 @@ import { Button, Checkbox, Header, Segment } from 'semantic-ui-react';
 import { deleteDB } from 'idb';
 import { useLocalStorage } from 'usehooks-ts';
 import FAQ from '@/components/FAQ';
-import Stats from '@/components/Stats';
 import styles from './index.module.less';
 
 const AboutHeader: React.FC = () => (
@@ -52,6 +51,9 @@ const Developers = () => (
         <li>
           <a href="https://github.com/yhx-12243">yhx-12243</a>
         </li>
+        <li>
+          <a href="https://github.com/zhili-edu">执理教育科技</a>
+        </li>
       </ul>
       <p>以上排名不分先后，感谢他们的贡献。</p>
     </Segment>
@@ -60,12 +62,12 @@ const Developers = () => (
 
 const links = [
   {
-    name: 'LibreOJ',
-    url: 'https://loj.ac',
+    name: '执理教育科技',
+    url: 'https://zhili-edu.com',
   },
   {
-    name: 'HydroOJ',
-    url: 'https://hydro.ac',
+    name: '知理信息学平台',
+    url: 'https://code-edu.net',
   },
 ];
 
@@ -159,7 +161,6 @@ const About: React.FC = () => (
 
     <AboutHeader />
     <FAQ />
-    <Stats />
     <Developers />
     <FriendLinks />
     <Config />

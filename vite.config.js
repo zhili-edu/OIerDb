@@ -7,18 +7,12 @@ import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import { viteExternalsPlugin } from 'vite-plugin-externals';
 import { createHtmlPlugin } from 'vite-plugin-html';
 
-const buildHash =
-  /* Netlify */ process.env.COMMIT_REF ||
-  /* CI */ process.env.BUILD_SHA ||
-  /* GitHub Actions */ process.env.GITHUB_SHA ||
-  /* Local */ crypto
-    .createHash('sha256')
-    .update(new Date().toISOString())
-    .digest('hex');
+const buildHash = crypto
+  .createHash('sha256')
+  .update(new Date().toISOString())
+  .digest('hex');
 
-const data = {
-  appVersion: buildHash,
-};
+const data = { appVersion: buildHash };
 
 const cdnjsBaseUrl = process.env.VITE_BAOSHUO_CDNJS
   ? '//cdnjs.baoshuo.ren/ajax/libs'
