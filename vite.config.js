@@ -3,7 +3,7 @@
 import react from '@vitejs/plugin-react';
 import crypto from 'crypto';
 import path from 'path';
-import { defineConfig, splitVendorChunkPlugin } from 'vite';
+import { defineConfig } from 'vite';
 import { createHtmlPlugin } from 'vite-plugin-html';
 
 const buildHash = crypto
@@ -16,7 +16,6 @@ const data = { appVersion: buildHash };
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    splitVendorChunkPlugin(),
     react(),
     createHtmlPlugin({
       minify: true,
@@ -24,9 +23,7 @@ export default defineConfig({
       inject: { data },
     }),
   ],
-  build: {
-    sourcemap: true,
-  },
+  build: { target: 'es6' },
   resolve: {
     alias: {
       '@': path.join(__dirname, './src'),
