@@ -20,7 +20,7 @@ import getProgress from '@/utils/getProgress';
 import fixContestName from '@/utils/fixContestName';
 import Pagination from '@/components/Pagination';
 import styles from './[id].module.less';
-import { awardColors, awardLevels } from '@/libs/OIerDb';
+import { awardColors, awardLevels, provincesWithId } from '@/libs/OIerDb';
 import compareGrades from '@/utils/compareGrades';
 
 const NotFound = lazy(() => import('@/pages/404'));
@@ -52,12 +52,23 @@ const Contest: React.FC = () => {
     setSearchParams({ grade: String(grade), page: '1' });
   };
 
-  const provinces = useMemo(
-    () => [
+  const provinces = useMemo(() => {
+    const withId2 = Object.fromEntries(
+      Object.entries(provincesWithId).map(([id, province]) => [province, id])
+    );
+
+    return [
       ...new Set(contest.contestants.map((contestant) => contestant.province)),
-    ],
-    [id]
-  );
+    ]
+      .map((province) => ({
+        key: withId2[province],
+        value: province,
+        text: `${province} (${withId2[province]})`,
+        content: province,
+        label: { content: withId2[province], basic: true, size: 'mini' },
+      }))
+      .sort((a, b) => a.key.localeCompare(b.key));
+  }, [id]);
 
   const grades = useMemo(
     () => [
@@ -101,8 +112,9 @@ const Contest: React.FC = () => {
       <h1>{contestName}</h1>
       <p>
         举办于 {contest.year} 年（{contest.school_year()}-
-        {contest.school_year() + 1} 学年），共 {contest.contestants.length}{' '}
-        人获奖。
+        {contest.school_year() + 1} 学年），共{' '}
+        {contest.capacity ? `${contest.capacity} 人参赛、` : ''}
+        {contest.contestants.length} 人获奖。
       </p>
       <h4>获奖情况</h4>
       <div style={{ height: 200 }}>
@@ -171,11 +183,7 @@ const Contest: React.FC = () => {
             clearable
             placeholder="省份"
             value={province}
-            options={provinces.map((province) => ({
-              key: province,
-              value: province,
-              text: province,
-            }))}
+            options={provinces}
             onChange={(_, { value }) => setProvince(value as string)}
           />
         </Form.Group>
@@ -183,7 +191,12 @@ const Contest: React.FC = () => {
       <Table basic="very" unstackable>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell width={1}>#</Table.HeaderCell>
+            <Table.HeaderCell width={1}>
+              {grade || province ? `总排名` : '#'}
+            </Table.HeaderCell>
+            {Boolean(grade || province) && (
+              <Table.HeaderCell>#</Table.HeaderCell>
+            )}
             <Table.HeaderCell>姓名</Table.HeaderCell>
             <Table.HeaderCell width={2}>年级</Table.HeaderCell>
             <Table.HeaderCell>成绩</Table.HeaderCell>
@@ -194,13 +207,18 @@ const Contest: React.FC = () => {
         <Table.Body>
           {data
             .slice((page - 1) * perPage, page * perPage)
-            .map((contestant) => (
+            .map((contestant, index) => (
               <PersonCard
                 key={`CONTEST${contest.id}-${contestant.oier.uid}`}
                 oier={contestant.oier}
                 trigger={
                   <>
                     <Table.Cell>{contestant.rank}</Table.Cell>
+                    {Boolean(grade || province) && (
+                      <Table.Cell width={1}>
+                        {(page - 1) * perPage + index + 1}
+                      </Table.Cell>
+                    )}
                     <Table.Cell>{contestant.oier.name}</Table.Cell>
                     <Table.Cell>
                       {getGrade(
